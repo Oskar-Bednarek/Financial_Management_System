@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main>
+    <!-- Top Bar -->
+    <div class="flex items-center justify-between bg-[rgba(232,218,239,0.8)] p-4 shadow rounded-md mb-6">
+    <h2 class="text-2xl font-bold text-[#98208f] flex items-center space-x-4">
+        <span>Automatic Repayment Simulation</span>
+    </h2>
+
+    <!-- Group button + form in a container -->
+    <div class="flex items-center space-x-4">
+
+
+        <form method="get" class="flex items-center space-x-2">
+        <label for="loan_number" class="text-[#98208f] font-medium whitespace-nowrap">Select Loan:</label>
+        <select name="loan_number" id="loan_number" class="border p-2 rounded w-72">
+            <option value="">-- Choose a loan --</option>
+            {% for loan in loans %}
+            <option value="{{ loan.LoanNumber }}" {% if selected_loan_number and selected_loan_number == loan.LoanNumber %}selected{% endif %}>
+                Loan {{ loan.LoanNumber }} - {{ loan.project.ProjectName }} - {{ loan.ProjectType }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <label for="end_date" class="text-[#98208f] font-medium whitespace-nowrap">End Date:</label>
+        <input type="date" id="end_date" name="end_date" class="border p-2 rounded" value="{{ end_date if end_date else '' }}">
+
+        <button type="submit" class="px-4 py-2 bg-[#98208f] text-white rounded hover:bg-[#7a1672] whitespace-nowrap">Simulate Repayment</button>
+        </form>
+        <button type="button"
+                class="px-4 py-2 bg-[#98208f] text-white rounded hover:bg-[#7a1672] whitespace-nowrap">
+            Export
+        </button>
+        <a href="{{ url_for('report.simulate_repayment_custom') }}" 
+            class="px-4 py-2 bg-[#98208f] text-white rounded hover:bg-[#7a1672] whitespace-nowrap">
+            Go to manual simulation
+        </a>
+    </div>
+    </div>
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="bg-red-400 text-white p-4 rounded mb-4">
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Repayment Schedule Table -->
+  <div class="overflow-x-auto bg-white shadow rounded-xl mx-auto">
+    <table class="min-w-full divide-y divide-gray-200 text-lg text-gray-700">
+      <thead class="bg-[rgba(232,218,239,0.8)] text-[#98208f] uppercase font-semibold text-lg">
+        <tr>
+          <th class="px-6 py-3 text-left">Loan Number</th>
+          <th class="px-6 py-3 text-left">Tranche</th>
+          <th class="px-6 py-3 text-left">Principal</th>
+          <th class="px-6 py-3 text-left">Received</th>
+          <th class="px-6 py-3 text-left">Repayment Date</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white">
+        {% if schedule %}
+          {% for entry in schedule %}
+            <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
+              <td class="px-6 py-2">{{ entry.LoanNumber }}</td>
+              <td class="px-6 py-2">{{ entry.TrancheNumber }}</td>
+              <td class="px-6 py-2">{{ entry.Principal }}</td>
+              <td class="px-6 py-2">{{ entry.DateReceived.strftime('%Y-%m-%d') }}</td>
+              <td class="px-6 py-2">{{ entry.date.strftime('%Y-%m-%d') }}</td>
+            </tr>
+          {% endfor %}
+
+          <!-- Tax Row -->
+          <tr class="bg-green-100 text-green-700 font-medium">
+            <td class="px-6 py-2" colspan="2">Tax on Interest (19%)</td>
+            <td class="px-6 py-2">{{ tax_on_interest }}</td>
+            <td class="px-6 py-2"></td>
+            <td class="px-6 py-2"></td>
+          </tr>
+
+          <!-- Interest to Lender Row -->
+          <tr class="bg-green-100 text-green-700 font-medium">
+            <td class="px-6 py-2" colspan="2">Interest to Lender</td>
+            <td class="px-6 py-2">{{ interest_to_lender }}</td>
+            <td class="px-6 py-2"></td>
+            <td class="px-6 py-2"></td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="5" class="px-6 py-4 text-center text-gray-500">No repayment schedule to show.</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</main>
+{% endblock %}

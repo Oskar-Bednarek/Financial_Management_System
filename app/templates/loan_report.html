@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main>
+  <!-- Top Bar -->
+  <div class="flex items-center justify-between bg-[rgba(232,218,239,0.8)] p-4 shadow rounded-md mb-6">
+    <h2 class="text-2xl font-bold text-[#98208f] flex items-center space-x-4">
+      <span>
+        {% if loan %}
+          Loan Snapshot - Loan {{ loan.LoanNumber }} - {{ loan.project.ProjectName }} - {{ loan.ProjectType }} - {{ loan.Status }}
+        {% else %}
+          Loan Snapshot
+        {% endif %}
+      </span>
+      {% if loan %}
+        <span class="{% if fully_repaid %}text-green-600{% else %}text-yellow-500{% endif %} text-2xl font-semibold">
+          {{ 'Repaid' if fully_repaid else 'Ongoing' }}
+        </span>
+      {% endif %}
+    </h2>
+
+    <form method="get" class="flex items-center space-x-2" id="loanForm">
+      <label for="loan_number" class="text-[#98208f] font-medium">Select Loan:</label>
+      <select name="loan_number" id="loan_number" class="border p-2 rounded w-72">
+        <option value="">-- Choose a loan --</option>
+        {% for ln, pname, ptype in loans %}
+        <option value="{{ ln }}" {% if loan and loan.LoanNumber == ln %}selected{% endif %}>
+          Loan {{ ln }} - {{ pname }} - {{ ptype }}
+        </option>
+        {% endfor %}
+      </select>
+      <!-- Removed the Go button for auto-submit -->
+    </form>
+  </div>
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="bg-red-400 text-white p-4 rounded mb-4">
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Report Table -->
+  <div class="overflow-x-auto bg-white shadow rounded-xl mx-auto">
+    <table class="min-w-full divide-y divide-gray-200 text-lg text-gray-700">
+      <thead class="bg-[rgba(232,218,239,0.8)] text-[#98208f] uppercase font-semibold text-lg">
+        <tr>
+          <th class="px-6 py-3 text-left">Tranche</th>
+          <th class="px-6 py-3 text-left">Received Date</th>
+          <th class="px-6 py-3 text-left">Repayment Date</th>
+          <th class="px-6 py-3 text-left">Principal Left</th>
+          <th class="px-6 py-3 text-left">Capitalized Interest (Prev Years)</th>
+          {% if fully_repaid %}
+            <th class="px-6 py-3 text-left">Interest for final year</th>
+          {% endif %}
+          <th class="px-6 py-3 text-left">Total Due</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white">
+        {% if report %}
+          {% for row in report %}
+            <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
+              <td class="px-6 py-2">{{ row.TrancheNumber }}</td>
+              <td class="px-6 py-2">{{ row.DateReceived.strftime('%Y-%m-%d') }}</td>
+              <td class="px-6 py-2">{{ row.LatestRepaymentDate.strftime('%Y-%m-%d') if row.LatestRepaymentDate else '-' }}</td>
+              <td class="px-6 py-2">{{ row.PrincipalLeft }}</td>
+              <td class="px-6 py-2">{{ row.PriorInterest }}</td>
+              {% if fully_repaid %}
+                <td class="px-6 py-2">{{ row.YearlyInterest }}</td>
+              {% endif %}
+              <td class="px-6 py-2">{{ row.TotalDue }}</td>
+            </tr>
+          {% endfor %}
+
+          <!-- Total Row -->
+          <tr class="bg-gray-100 font-semibold border-t border-gray-300">
+            <td class="px-6 py-2" colspan="3">Total</td>
+            <td class="px-6 py-2">{{ total_principal }}</td>
+            <td class="px-6 py-2">{{ total_prior }}</td>
+            {% if fully_repaid %}
+              <td class="px-6 py-2">{{ total_current }}</td>
+            {% endif %}
+            <td class="px-6 py-2">{{ total_interest }}</td>
+          </tr>
+
+          {% if tax is not none %}
+            <!-- Tax Row -->
+            <tr class="bg-green-100 text-green-700 font-medium">
+              <td class="px-6 py-2" colspan="1">Tax on Interest (19%)</td>
+              <td class="px-6 py-2" colspan="{{ 6 if fully_repaid else 5 }}">{{ tax }}</td>
+            </tr>
+
+            <!-- Lender Interest Row -->
+            <tr class="bg-green-100 text-green-700 font-medium">
+              <td class="px-6 py-2" colspan="1">Interest to Lender</td>
+              <td class="px-6 py-2" colspan="{{ 6 if fully_repaid else 5 }}">{{ lender_interest }}</td>
+            </tr>
+          {% endif %}
+        {% else %}
+          <tr>
+            <td colspan="7" class="px-6 py-4 text-center text-gray-500">No outstanding loans for {{ year }}.</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+  document.getElementById('loan_number').addEventListener('change', function() {
+    if(this.value !== '') {
+      document.getElementById('loanForm').submit();
+    }
+  });
+</script>
+{% endblock %}

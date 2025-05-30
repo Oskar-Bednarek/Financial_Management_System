@@ -1,0 +1,126 @@
+/* Sidebar styling */
+.sidebar {
+  min-height: 100vh; /* full viewport height minimum */
+  overflow-y: auto;  /* scroll inside sidebar if content overflows vertically */
+  background-color: rgba(232, 218, 239, 0.8);
+  backdrop-filter: blur(8px);
+  box-shadow: 6px 6px 30px rgba(0, 0, 0, 0.3);
+  z-index: 20;
+}
+
+/* Adjust sidebar size */
+.sidebar-logo {
+  width: 220px;
+}
+
+/* Styling for buttons in the sidebar */
+.sidebar-button {
+  padding: 12px 24px;
+  width: 100%;
+  text-align: left;
+  font-size: 16px;
+  color: #333;
+  background-color: transparent;
+  border: none;
+  border-radius: 4px;
+  margin: 8px 0;
+  transition: all 0.3s ease;
+}
+
+.sidebar-button:hover {
+  background-color: #98208f; /* Light purple */
+  color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+
+
+
+/* Top bar styling */
+.topbar {
+  background-color: rgba(232, 218, 239, 0.8); /* Light blue */
+  backdrop-filter: blur(8px); /* Apply blur to the background */
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2); /* Shadow at the bottom */
+  height: 30px; /* You can adjust this */
+  z-index: 10; /* Ensure it's above the watermark */
+}
+
+/* Theme toggle button styles */
+#theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+#theme-toggle i {
+  font-size: 20px;
+  color: #98208f;
+}
+
+
+
+
+/* Main content area */
+.main-content {
+  position: relative;
+  background-color: #FFFFFF;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  z-index: 0;
+  height: 100vh; /* Ensure it fills the entire viewport height */
+}
+
+/* Watermark grid */
+.watermark-grid {
+  position: absolute;
+  top: -50%; /* Move it up by 30% to fill the top */
+  left: -30%; /* Move it left by 30% to fill the left side */
+  width: 200%; /* Increase width to 200% of the page to ensure it covers more area */
+  height: 200%; /* Increase height to 200% of the page */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+  gap: 100px; /* Adjust the spacing between logos */
+  opacity: 0.03;
+  filter: grayscale(100%);
+  transform: rotate(-30deg);
+  z-index: -1; /* Ensure the watermark stays behind all other content */
+  pointer-events: none; /* Make sure it doesn't block other elements */
+}
+
+/* Watermark image size */
+.watermark-grid img {
+  width: 500px; /* Adjust watermark image size */
+  height: auto;
+  margin: 0 auto; /* Center watermark images */
+}
+
+/* Ensure that the watermark is behind table content specifically */
+.loans-page {
+  position: relative;
+}
+
+.loans-page .watermark-grid {
+  z-index: -1; /* Push it behind all other content */
+}
+
+/* Ensuring the body doesn't overlap */
+body {
+  margin: 0;
+}
+
+/* Flex container for page layout */
+.flex-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+
+

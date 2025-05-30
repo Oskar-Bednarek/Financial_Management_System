@@ -1,0 +1,11 @@
+# Ignore sensitive config
+/config.py
+
+# Ignore real logos
+app/static/logo.png
+app/static/logo2.png
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class

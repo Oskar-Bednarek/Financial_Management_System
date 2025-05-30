@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Loan Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/heroicons@1.0.6/outline.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  </head>
+
+  <body class="bg-white text-gray-900 transition-all">
+
+    <div class="flex-layout">
+      <!-- Sidebar -->
+      {% include 'partials/sidebar.html' %}
+      
+      <!-- Main content area -->
+      <div class="flex-1 flex flex-column">
+        <!-- Top bar -->
+        {% include 'partials/topbar.html' %}
+
+        <!-- Page content -->
+        <main class="flex-1 p-6 main-content relative">
+          <!-- Watermark Section -->
+          <div class="watermark-grid">
+            {% for _ in range(100) %}
+              <img src="{{ url_for('static', filename='logo2.png') }}" alt="Watermark logo" />
+            {% endfor %}
+          </div>
+        
+          <!-- Page-specific content -->
+          <div class="relative z-10">
+            {% block content %}{% endblock %}
+          </div>
+        </main>
+        
+      </div>
+    </div>
+
+    <!-- Link to your main.js file -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- This block allows page-specific additional scripts -->
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

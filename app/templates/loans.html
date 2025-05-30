@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="flex-1">
+
+    <div class="flex items-center justify-between bg-[rgba(232,218,239,0.8)] p-4 shadow rounded-md mb-6">
+        <h2 class="text-2xl font-bold text-[#98208f]">Loans</h2>
+        
+        <div class="flex items-center space-x-4">
+            <!-- Filter Dropdown -->
+            <div class="relative inline-block text-left">
+                <button onclick="toggleFilter()" class="bg-[#98208f] text-white font-medium px-6 py-2 rounded-md text-lg hover:bg-[#6b146e]">
+                    Filter
+                </button>
+                <div id="filter-dropdown" class="absolute left-0 z-20 mt-2 w-72 bg-white rounded-md shadow-lg hidden p-4 space-y-4">
+                    <form method="get" class="space-y-4">
+                      
+                        <!-- Project Filter -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Projects</label>
+                            <div class="space-y-1 max-h-40 overflow-y-auto border rounded px-2 py-1">
+                                <label class="block"><input type="checkbox" id="check-all-projects" onchange="toggleAll(this, 'project[]')"> <strong>Select All</strong></label>
+                                {% for project in projects %}
+                                    <label class="block"><input type="checkbox" name="project[]" value="{{ project }}" {% if project in selected_projects %}checked{% endif %}> {{ project }}</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                      
+                        <!-- Project Type Filter -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Project Types</label>
+                            <div class="space-y-1 max-h-40 overflow-y-auto border rounded px-2 py-1">
+                                <label class="block"><input type="checkbox" id="check-all-types" onchange="toggleAll(this, 'project_type[]')"> <strong>Select All</strong></label>
+                                {% for pt in project_types %}
+                                    <label class="block"><input type="checkbox" name="project_type[]" value="{{ pt }}" {% if pt in selected_project_types %}checked{% endif %}> {{ pt }}</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                      
+                        <!-- Start Date Filter -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Start Date Range</label>
+                            <div class="flex space-x-2">
+                                <input type="date" name="start_date_from" value="{{ start_date_from }}" class="w-1/2 border border-gray-300 rounded px-2 py-1">
+                                <input type="date" name="start_date_to" value="{{ start_date_to }}" class="w-1/2 border border-gray-300 rounded px-2 py-1">
+                            </div>
+                        </div>
+
+                        <!-- Status Filter -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+                            <div class="space-y-1 max-h-40 overflow-y-auto border rounded px-2 py-1">
+                                <label class="block"><input type="radio" name="status" value="fully_repaid" {% if status_filter == 'fully_repaid' %}checked{% endif %}> Fully Repaid</label>
+                                <label class="block"><input type="radio" name="status" value="not_repaid" {% if status_filter == 'not_repaid' %}checked{% endif %}> Not Repaid</label>
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="flex flex-col gap-2">
+                            <button type="submit" class="w-full bg-[#98208f] text-white font-medium px-4 py-2 rounded hover:bg-[#6b146e]">
+                                Apply Filters
+                            </button>
+                            <a href="{{ url_for('loans.loans') }}" class="w-full text-center bg-gray-300 text-gray-800 font-medium px-4 py-2 rounded hover:bg-gray-400">
+                                Reset Filters
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        
+            <!-- Export Dropdown -->
+            <div class="relative inline-block text-left">
+            <button onclick="toggleExport()" class="bg-[#98208f] text-white font-medium px-6 py-2 rounded-md text-lg hover:bg-[#6b146e]">
+                Export
+            </button>
+            <div id="export-dropdown" class="absolute right-0 z-20 mt-2 w-48 bg-white rounded-md shadow-lg hidden">
+                <button onclick="showExportOptions('loans')" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">Loans</button>
+                <button onclick="showExportOptions('all')" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">All Data</button>
+            </div>
+            <div id="export-format" class="absolute right-0 z-10 mt-2 w-48 bg-white rounded-md shadow-lg hidden">
+                <a id="export-excel-link" href="#" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">Excel</a>
+                <a id="export-csv-link" href="#" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">CSV</a>
+            </div>
+            </div>
+        
+            <!-- Add New Loan Button -->
+            <button onclick="openModal()" class="bg-[#98208f] text-white font-medium px-6 py-2 rounded-md text-lg hover:bg-[#6b146e]">
+            Add New Loan
+            </button>
+        </div>
+        </div>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="bg-red-400 text-white p-4 rounded mb-4">
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="overflow-x-auto bg-white shadow rounded-xl mx-auto">
+    <table class="min-w-full divide-y divide-gray-200 text-lg text-gray-700">
+      <thead class="bg-[rgba(232,218,239,0.8)] text-[#98208f] uppercase font-semibold text-lg">
+        <tr>
+          <th class="px-6 py-3 text-left">Loan Number</th>
+          <th class="px-6 py-3 text-left">Project</th>
+          <th class="px-6 py-3 text-left">Project Type</th>
+          <th class="px-6 py-3 text-left">Start Date</th>
+          <th class="px-6 py-3 text-left">Interest Rate</th>
+          <th class="px-6 py-3 text-left">Capitalization</th>
+          <th class="px-6 py-3 text-left">Amount</th>
+          <th class="px-6 py-3 text-left">Status</th>
+          <th class="px-6 py-3 text-left"></th>
+        </tr>
+      </thead>
+      <tbody class="bg-white">
+        {% if loans %}
+          {% for loan, project_name, repaid in loans %}
+            <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
+              <td class="px-6 py-4 text-lg">Loan {{ loop.index }}</td>
+              <td class="px-6 py-4 text-lg">{{ project_name }}</td>
+              <td class="px-6 py-4 text-lg">{{ loan.ProjectType or 'N/A' }}</td>
+              <td class="px-6 py-4 text-lg">{{ loan.StartDate.strftime('%Y-%m-%d') }}</td>
+              <td class="px-6 py-4 text-lg">{{ (loan.InterestRate * 100) | round(2) }}%</td>
+              <td class="px-6 py-4 text-lg">
+                {% if loan.Capitalization %}
+                  <span class="text-green-700 font-semibold">Yes</span>
+                {% else %}
+                  <span class="text-red-700 font-semibold">No</span>
+                {% endif %}
+              </td>
+              <td class="px-6 py-4 text-lg">{{ "{:,.2f}".format(loan.TotalAmount) }}</td>
+              <td class="px-6 py-4 text-lg">
+                {% if repaid %}
+                  <span class="text-green-700 font-semibold">Repaid</span>
+                {% else %}
+                  <span class="text-yellow-600 font-semibold">Ongoing</span>
+                {% endif %}
+              </td>
+              <td class="px-6 py-4 text-right">
+                <form action="{{ url_for('loans.delete_loan', loan_id=loan.LoanNumber) }}" method="post" class="inline" onsubmit="return confirm('Are you sure you want to delete this loan?');">
+                  <button type="submit" class="text-red-600 hover:text-red-800">Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="9" class="px-6 py-4 text-center text-gray-500">No loans found</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+<!-- Modal -->
+<div id="new-loan-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-lg">
+      <h3 class="text-xl font-bold mb-4 text-[#98208f]">Add New Loan</h3>
+      <form action="{{ url_for('loans.create_loan') }}" method="post">
+
+        <!-- Select Project -->
+        <div class="mb-4">
+            <label for="project_name" class="block text-sm font-medium text-gray-700">Project</label>
+            <select id="project_name" name="project_name" class="block w-full mt-1 p-2 border border-gray-300 rounded-md">
+                <option value="">Select a project</option>
+                {% for pid, pname in id_name %}
+                    <option value="{{ pname }}">{{ pname }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+
+        <!-- Static Project Type Dropdown -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700">Project Type</label>
+          <select name="project_type" id="project_type" class="mt-1 w-full border border-gray-300 rounded px-3 py-2" required>
+            <option value="Property">Property</option>
+            <option value="Building Process">Building Process</option>
+            <option value="Apartment">Apartment</option>
+          </select>
+        </div>
+  
+        <!-- Amount Input -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700">Total Amount</label>
+          <input type="number" name="total_amount" step="0.01" class="mt-1 w-full border border-gray-300 rounded px-3 py-2" required>
+        </div>
+  
+        <!-- Interest Rate Input -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700">Interest Rate</label>
+          <input type="number" name="interest_rate" step="0.01" class="mt-1 w-full border border-gray-300 rounded px-3 py-2" required>
+        </div>
+  
+        <!-- Capitalization Checkbox -->
+        <div class="mb-4">
+          <label class="inline-flex items-center">
+            <input type="checkbox" name="capitalization" class="form-checkbox">
+            <span class="ml-2">Capitalization</span>
+          </label>
+        </div>
+      <!-- Start Date -->
+        <div class="mb-4">
+            <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date</label>
+            <input type="date" id="start_date" name="start_date" class="block w-full mt-1 p-2 border border-gray-300 rounded-md" required>
+        </div>  
+
+
+
+        <!-- Buttons -->
+        <div class="flex justify-end space-x-3 pt-2">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-[#98208f] text-white rounded hover:bg-[#6b146e]">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function openModal() {
+    document.getElementById('new-loan-modal').classList.remove('hidden');
+  }
+  function closeModal() {
+    document.getElementById('new-loan-modal').classList.add('hidden');
+  }
+  function toggleExport() {
+    document.getElementById('export-dropdown').classList.toggle('hidden');
+    document.getElementById('export-format').classList.add('hidden');
+  }
+  function showExportOptions(type) {
+    document.getElementById('export-format').classList.remove('hidden');
+    document.getElementById('export-dropdown').classList.add('hidden');
+
+    const excelLink = document.getElementById('export-excel-link');
+    const csvLink = document.getElementById('export-csv-link');
+
+    excelLink.href = "{{ url_for('export.export_data', export_type='loans', file_type='excel') }}";
+    csvLink.href = "{{ url_for('export.export_data', export_type='loans', file_type='csv') }}";
+
+    if (type === 'all') {
+      excelLink.href = excelLink.href.replace('loans', 'all');
+      csvLink.href = csvLink.href.replace('loans', 'all');
+    }
+  }
+  function toggleFilter() {
+    const dropdown = document.getElementById("filter-dropdown");
+    dropdown.classList.toggle("hidden");
+  }
+
+  function applyFilter(type) {
+    alert("Filter by: " + type); // Replace this with your actual filter logic
+    document.getElementById('filter-dropdown').classList.add('hidden');
+  }
+
+  window.addEventListener('click', function (e) {
+    const filterButton = document.querySelector('[onclick="toggleFilter()"]');
+    const filterMenu = document.getElementById('filter-dropdown');
+    if (filterMenu && !filterButton.contains(e.target) && !filterMenu.contains(e.target)) {
+      filterMenu.classList.add('hidden');
+    }
+  });
+
+  function toggleAll(master, name) {
+    const checkboxes = document.querySelectorAll(input[name="${name}"]);
+    checkboxes.forEach(cb => cb.checked = master.checked);
+  }
+</script>
+{% endblock %}

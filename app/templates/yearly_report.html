@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main>
+  <!-- Top Bar -->
+  <div class="flex items-center justify-between bg-[rgba(232,218,239,0.8)] p-4 shadow rounded-md mb-6">
+    <h2 class="text-2xl font-bold text-[#98208f]">Annual Summary - {{ year }}</h2>
+
+    <div class="flex items-center space-x-4">
+      <form method="get" class="flex items-center space-x-2">
+        <label for="year" class="text-sm font-medium text-[#98208f]">Select Year:</label>
+        <input type="number" name="year" id="year" value="{{ year }}" class="border border-gray-300 rounded px-2 py-1 w-24">
+        <button type="submit" class="bg-[#98208f] text-white px-4 py-2 rounded hover:bg-[#6b146e]">
+          Go
+        </button>
+      </form>
+
+      <!-- View Toggle Button -->
+      <button id="viewToggle" data-view="summarized" onclick="toggleView()" 
+        class="bg-[#98208f] text-white px-4 py-2 rounded hover:bg-[#6b146e]">
+        Show Itemized Summary
+      </button>
+    </div>
+  </div>
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="bg-red-400 text-white p-4 rounded mb-4">
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Report Table -->
+  <div class="overflow-x-auto bg-white shadow rounded-xl mx-auto">
+    <table class="min-w-full divide-y divide-gray-200 text-lg text-gray-700">
+      <thead class="bg-[rgba(232,218,239,0.8)] text-[#98208f] uppercase font-semibold text-lg">
+        <tr>
+          <th class="px-6 py-3 text-left">Loan Number</th>
+          <th class="px-6 py-3 text-left tranche-column">Tranche</th>
+          <th class="px-6 py-3 text-left">Principal Left</th>
+          <th class="px-6 py-3 text-left">Capitalized Interest (Prev Years)</th>
+          <th class="px-6 py-3 text-left">Interest for {{ year }}</th>
+          <th class="px-6 py-3 text-left">Total Due</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white">
+        {% if report %}
+          {% for row in report %}
+            {% set row_class = 'summary-row' if row.is_summary else 'tranche-row' %}
+            <tr class="border-b border-gray-200 hover:bg-gray-50 transition {{ row_class }}">
+              <td class="px-6 py-2 font-semibold">
+                {% if row.LoanNumber == 'Grand Total' %}
+                  Grand Total
+                {% else %}
+                  {{ row.LoanNumber }} - {{ row.ProjectName }} - {{ row.ProjectType }}
+                {% endif %}
+              </td>
+              <td class="px-6 py-2 tranche-column">{{ row.TrancheNumber }}</td>
+              <td class="px-6 py-2">{{ row.PrincipalLeft }}</td>
+              <td class="px-6 py-2">{{ row.PriorInterest }}</td>
+              <td class="px-6 py-2">{{ row.YearlyInterest }}</td>
+              <td class="px-6 py-2">{{ row.TotalDue }}</td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="6" class="px-6 py-4 text-center text-gray-500">No outstanding loans for {{ year }}.</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Toggle Script -->
+
+  <script>
+    function toggleView() {
+      const btn = document.getElementById('viewToggle');
+      const isItemized = btn.dataset.view === 'itemized';
+
+      // Toggle visibility of tranche rows and columns
+      document.querySelectorAll('.tranche-row').forEach(row => {
+        row.style.display = isItemized ? 'none' : '';
+      });
+      document.querySelectorAll('.tranche-column').forEach(col => {
+        col.style.display = isItemized ? 'none' : '';
+      });
+
+      // Style summary rows conditionally
+      document.querySelectorAll('.summary-row').forEach(row => {
+        const isGrandTotal = row.innerText.includes('Grand Total');
+
+        if (isItemized) {
+          // Summarized view
+          row.classList.remove('bg-gray-100');
+          if (isGrandTotal) {
+            row.classList.add('bg-gray-100');
+          }
+
+          row.querySelectorAll('td').forEach((td, i) => {
+            td.style.fontWeight = (i === 0 || isGrandTotal) ? '600' : 'normal';
+          });
+        } else {
+          // Itemized view: all summary rows gray and bold
+          row.classList.add('bg-gray-100');
+          row.querySelectorAll('td').forEach(td => {
+            td.style.fontWeight = '600';
+          });
+        }
+      });
+
+      btn.textContent = isItemized ? 'Show Detailed Summary' : 'Show Summarized Summary';
+      btn.dataset.view = isItemized ? 'summarized' : 'itemized';
+    }
+
+    // Run on page load to set summarized view as default
+    window.addEventListener('DOMContentLoaded', () => {
+      // Hide tranche rows and columns
+      document.querySelectorAll('.tranche-row').forEach(row => {
+        row.style.display = 'none';
+      });
+      document.querySelectorAll('.tranche-column').forEach(col => {
+        col.style.display = 'none';
+      });
+
+      // Apply summarized style to summary rows
+      document.querySelectorAll('.summary-row').forEach(row => {
+        const isGrandTotal = row.innerText.includes('Grand Total');
+
+        row.classList.remove('bg-gray-100');
+        if (isGrandTotal) {
+          row.classList.add('bg-gray-100');
+        }
+
+        row.querySelectorAll('td').forEach((td, i) => {
+          td.style.fontWeight = (i === 0 || isGrandTotal) ? '600' : 'normal';
+        });
+      });
+    });
+  </script>
+</main>
+{% endblock %}

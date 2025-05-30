@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="flex-1">
+
+  <!-- Page Heading with Filter, Finalize and Add Button -->
+  <div class="flex items-center justify-between bg-[rgba(232,218,239,0.8)] p-4 shadow rounded-md mb-6">
+    <h2 class="text-2xl font-bold text-[#98208f]">Projects</h2>
+    <div class="flex items-center space-x-4">
+      
+            <!-- Finalize Project Button -->
+      <button onclick="openFinalizeModal()" class="bg-[#98208f] text-white font-medium px-6 py-2 rounded-md text-lg hover:bg-[#6b146e]">
+        Finalize Project
+      </button>
+      <!-- Filter Dropdown -->
+      <div class="relative inline-block text-left">
+        <button onclick="toggleFilter()" class="bg-[#98208f] text-white font-medium px-6 py-2 rounded-md text-lg hover:bg-[#6b146e]">
+          Filter
+        </button>
+        <div id="filter-dropdown" class="absolute left-0 z-20 mt-2 w-72 bg-white rounded-md shadow-lg hidden p-4 space-y-4">
+          <form method="get" action="{{ url_for('projects.projects') }}" class="space-y-4">
+            
+            <!-- Status Filter -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+              <div class="space-y-1 max-h-40 overflow-y-auto border rounded px-2 py-1">
+                <label class="block"><input type="checkbox" id="check-all-status" onchange="toggleAll(this, 'status_filter')"> <strong>Select All</strong></label>
+                {% for status in ['In Progress', 'Completed', 'Cancelled'] %}
+                  <label class="block">
+                    <input type="checkbox" name="status_filter" value="{{ status }}" {% if status in request.args.getlist('status_filter') %}checked{% endif %}> {{ status }}
+                  </label>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex flex-col gap-2">
+              <button type="submit" class="w-full bg-[#98208f] text-white font-medium px-4 py-2 rounded hover:bg-[#6b146e]">
+                Apply Filters
+              </button>
+              <a href="{{ url_for('projects.projects') }}" class="w-full text-center bg-gray-300 text-gray-800 font-medium px-4 py-2 rounded hover:bg-gray-400">
+                Reset Filters
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+
+
+      <!-- Export Dropdown -->
+      <div class="relative inline-block text-left">
+        <button onclick="toggleExport()" class="bg-[#98208f] text-white font-medium px-6 py-2 rounded-md text-lg hover:bg-[#6b146e]">
+          Export
+        </button>
+        <div id="export-dropdown" class="absolute right-0 z-20 mt-2 w-48 bg-white rounded-md shadow-lg hidden">
+          <button onclick="showExportOptions('projects')" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">Projects</button>
+          <button onclick="showExportOptions('all')" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">All Data</button>
+        </div>
+        <div id="export-format" class="absolute right-0 z-10 mt-2 w-48 bg-white rounded-md shadow-lg hidden">
+          <a id="export-excel-link" href="#" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">Excel</a>
+          <a id="export-csv-link" href="#" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">CSV</a>
+        </div>
+      </div>
+
+      <!-- Add New Project Button -->
+      <button onclick="openModal()" class="bg-[#98208f] text-white font-medium px-6 py-2 rounded-md text-lg hover:bg-[#6b146e]">
+        Add New Project
+      </button>
+    </div>
+  </div>
+
+  <!-- Display flash messages -->
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="bg-red-400 text-white p-4 rounded mb-4">
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Projects Table -->
+  <div class="overflow-x-auto bg-white shadow rounded-xl mx-auto">
+    <table class="min-w-full divide-y divide-gray-200 text-lg text-gray-700">
+      <thead class="bg-[rgba(232,218,239,0.8)] text-[#98208f] uppercase font-semibold text-lg">
+        <tr>
+          <th class="px-6 py-3 text-left">ID</th>
+          <th class="px-6 py-3 text-left">Project Name</th>
+          <th class="px-6 py-3 text-left">Start Date</th>
+          <th class="px-6 py-3 text-left">End Date</th>
+          <th class="px-6 py-3 text-left">Status</th>
+          <th class="px-6 py-3 text-right"></th>
+        </tr>
+      </thead>
+      <tbody class="bg-white">
+        {% if projects %}
+          {% for project in projects %}
+            <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
+              <td class="px-6 py-4 text-lg">{{ project.ProjectID }}</td>
+              <td class="px-6 py-4 text-lg font-medium">{{ project.ProjectName }}</td>
+              <td class="px-6 py-4 text-lg">{{ project.StartDate.strftime('%Y-%m-%d') if project.StartDate else '—' }}</td>
+              <td class="px-6 py-4 text-lg">{{ project.EndDate.strftime('%Y-%m-%d') if project.EndDate else '—' }}</td>
+              <td class="px-6 py-4 text-lg">
+                <span class="inline-block px-3 py-1 rounded-full text-lg font-semibold
+                  {% if project.Status == 'In Progress' %}
+                    bg-yellow-100 text-yellow-800
+                  {% elif project.Status == 'Completed' %}
+                    bg-green-100 text-green-800
+                  {% elif project.Status == 'Cancelled' %}
+                    bg-red-100 text-red-800
+                  {% else %}
+                    bg-gray-200 text-gray-800
+                  {% endif %}">{{ project.Status }}</span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <form action="{{ url_for('projects.delete_project', project_id=project.ProjectID) }}" method="post" class="inline" onsubmit="return confirm('Are you sure you want to delete this project?');">
+                  <button type="submit" class="text-red-600 hover:text-red-800">Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="6" class="px-6 py-4 text-center text-gray-500">No projects found</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add New Project Modal -->
+  <div id="new-project-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-lg">
+      <h3 class="text-xl font-bold mb-4 text-[#98208f]">Add New Project</h3>
+      <form action="{{ url_for('projects.create_project') }}" method="post">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700">Project Name</label>
+          <input type="text" name="project_name" class="mt-1 w-full border border-gray-300 rounded px-3 py-2" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700">Start Date</label>
+          <input type="date" name="start_date" class="mt-1 w-full border border-gray-300 rounded px-3 py-2" required>
+        </div>
+        <div class="flex justify-end space-x-3 pt-2">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-[#98208f] text-white rounded hover:bg-purple-800">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Finalize Project Modal -->
+  <div id="finalize-project-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-lg">
+      <h3 class="text-xl font-bold mb-4 text-[#98208f]">Finalize Project</h3>
+      <form action="{{ url_for('projects.update_project_status') }}" method="post">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700">Select Project</label>
+          <select name="project_id" class="mt-1 w-full border border-gray-300 rounded px-3 py-2" required>
+            <option value="" disabled selected>Select a project</option>
+            {% for project in in_progress_projects %}
+              <option value="{{ project.ProjectID }}">{{ project.ProjectName }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700">New Status</label>
+          <select name="new_status" class="mt-1 w-full border border-gray-300 rounded px-3 py-2" required>
+            <option value="" disabled selected>Select new status</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700">End Date</label>
+          <input type="date" name="end_date" class="mt-1 w-full border border-gray-300 rounded px-3 py-2" required>
+        </div>
+        <div class="flex justify-end space-x-3 pt-2">
+          <button type="button" onclick="closeFinalizeModal()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-[#98208f] text-white rounded hover:bg-purple-800">Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // Toggle Filter Dropdown
+  function toggleFilter() {
+    const dropdown = document.getElementById('filter-dropdown');
+    dropdown.classList.toggle('hidden');
+  }
+
+  // Toggle Export Dropdown and format menu
+  function toggleExport() {
+    const dropdown = document.getElementById('export-dropdown');
+    const formatMenu = document.getElementById('export-format');
+    if (!dropdown.classList.contains('hidden')) {
+      dropdown.classList.add('hidden');
+      formatMenu.classList.add('hidden');
+    } else {
+      dropdown.classList.remove('hidden');
+      formatMenu.classList.add('hidden');
+    }
+  }
+
+  // Show export format options for selected data type
+  function showExportOptions(type) {
+    const formatMenu = document.getElementById('export-format');
+    const excelLink = document.getElementById('export-excel-link');
+    const csvLink = document.getElementById('export-csv-link');
+
+    excelLink.href = `/export/${type}/excel`;
+    csvLink.href = `/export/${type}/csv`;
+
+    formatMenu.classList.remove('hidden');
+  }
+
+  // Select/Deselect All checkboxes for status filter
+  function toggleAll(source, name) {
+    const checkboxes = document.querySelectorAll(`input[name="${name}"]`);
+    checkboxes.forEach(cb => cb.checked = source.checked);
+  }
+
+  // Open/Close Add Project Modal
+  function openModal() {
+    document.getElementById('new-project-modal').classList.remove('hidden');
+  }
+  function closeModal() {
+    document.getElementById('new-project-modal').classList.add('hidden');
+  }
+
+  // Open/Close Finalize Project Modal
+  function openFinalizeModal() {
+    document.getElementById('finalize-project-modal').classList.remove('hidden');
+  }
+  function closeFinalizeModal() {
+    document.getElementById('finalize-project-modal').classList.add('hidden');
+  }
+
+  // Close dropdowns when clicking outside
+  window.addEventListener('click', function(e) {
+    const filterDropdown = document.getElementById('filter-dropdown');
+    const filterBtn = document.querySelector('button[onclick="toggleFilter()"]');
+    if (!filterBtn.contains(e.target) && !filterDropdown.contains(e.target)) {
+      filterDropdown.classList.add('hidden');
+    }
+
+    const exportDropdown = document.getElementById('export-dropdown');
+    const exportBtn = document.querySelector('button[onclick="toggleExport()"]');
+    const exportFormat = document.getElementById('export-format');
+    if (!exportBtn.contains(e.target) && !exportDropdown.contains(e.target) && !exportFormat.contains(e.target)) {
+      exportDropdown.classList.add('hidden');
+      exportFormat.classList.add('hidden');
+    }
+  });
+</script>
+
+{% endblock %}

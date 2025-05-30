@@ -1,0 +1,71 @@
+<aside class="w-64 flex flex-col items-center py-4 sidebar sharp-corners">
+    <!-- Logo -->
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="sidebar-logo mb-6 mt-2 mx-auto" />
+    
+    <!-- Sidebar buttons -->
+    <div class="flex flex-col space-y-2 w-full flex-grow">
+      <!-- main.home -->
+      <a href="{{ url_for('main.home') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-6 py-3 transition-all">
+        Home
+      </a>
+  
+      <!-- Projects -->
+      <a href="{{ url_for('projects.projects') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-6 py-3 transition-all">
+        Projects
+      </a>
+  
+      <!-- Loans (collapsible) -->
+      <details class="group w-full" id="loans-section">
+        <summary class="bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-6 py-3 cursor-pointer transition-all">
+          Loans
+        </summary>
+        <div class="flex flex-col space-y-2 mt-2">
+          <a href="{{ url_for('loans.loans') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-10 py-3 transition-all">
+            Loans
+          </a>
+          <a href="{{ url_for('tranches.tranches') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-10 py-3 transition-all">
+            Tranches
+          </a>
+          <a href="{{ url_for('repayments.repayments') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-10 py-3 transition-all">
+            Repayments
+          </a>
+          <a href="{{ url_for('adjustments.adjustments') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-10 py-3 transition-all">
+            Adjustments
+          </a>
+        </div>
+      </details>
+  
+      <!-- Reports (collapsible) -->
+      <details class="group w-full" id="reports-section">
+        <summary class="bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-6 py-3 cursor-pointer transition-all">
+          Reports
+        </summary>
+        <div class="flex flex-col space-y-2 mt-2">
+          <a href="{{ url_for('report.yearly_report') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-10 py-3 transition-all">
+            Annual Summary
+          </a>
+        </div>
+        <div class="flex flex-col space-y-2 mt-2">
+          <a href="{{ url_for('report.custom_date_report') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-10 py-3 transition-all">
+            Daily Summary
+          </a>
+        </div>
+        <div class="flex flex-col space-y-2 mt-2">
+          <a href="{{ url_for('report.loan_report') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-10 py-3 transition-all">
+            Loan Snapshot
+          </a>
+        </div>
+        <div class="flex flex-col space-y-2 mt-2">
+          <a href="{{ url_for('report.simulate_repayment') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-10 py-3 transition-all">
+            Repayment Simulation
+          </a>
+        </div>
+      </details>
+    </div>
+  
+    <!-- Version Note -->
+    <div class="mt-auto text-center text-sm text-[#98208f]">
+      <p>Financial Management System</p>
+      <p>Version 1.0.0</p>
+    </div>
+</aside>

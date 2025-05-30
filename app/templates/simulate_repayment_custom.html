@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main>
+  <div class="bg-[rgba(232,218,239,0.8)] p-4 shadow rounded-md mb-6">
+    <form method="post" class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h2 class="text-2xl font-bold text-[#98208f] whitespace-nowrap">
+          Manual Repayment Simulation
+          {% if selected_loan_number %}
+            {% set selected_loan = loans | selectattr('LoanNumber', 'equalto', selected_loan_number) | list | first %}
+            <span class="text-2xl font-bold text-[#98208f] whitespace-nowrap">
+              – Loan {{ selected_loan.LoanNumber }} – {{ selected_loan.project.ProjectName }} – {{ selected_loan.ProjectType }}
+            </span>
+          {% endif %}
+        </h2>
+      </div>
+
+      <div class="flex items-center space-x-3">
+
+        <div class="flex items-center space-x-2">
+          <label for="loan_number" class="text-[#98208f] font-medium whitespace-nowrap">Select Loan:</label>
+          <select name="loan_number" id="loan_number"
+                  class="border p-2 rounded w-72"
+                  required onchange="this.form.submit()">
+            <option value="">-- Choose a loan --</option>
+            {% for loan in loans %}
+              <option value="{{ loan.LoanNumber }}" {% if selected_loan_number == loan.LoanNumber %}selected{% endif %}>
+                Loan {{ loan.LoanNumber }} - {{ loan.project.ProjectName }} - {{ loan.ProjectType }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="button"
+                class="px-4 py-2 bg-[#98208f] text-white rounded hover:bg-[#7a1672] whitespace-nowrap">
+          Export
+        </button>
+        <a href="{{ url_for('report.simulate_repayment') }}"
+          class="px-4 py-2 bg-[#98208f] text-white rounded hover:bg-[#7a1672] whitespace-nowrap">
+          Go to Automatic Simulation
+        </a>
+      </div>
+    </form>
+  </div>
+
+  {% if tranches_left %}
+    <form method="post">
+      <input type="hidden" name="loan_number" value="{{ selected_loan_number }}">
+      <input type="hidden" name="simulate" value="1">
+
+      <div class="overflow-x-auto bg-white shadow rounded-xl mx-auto">
+        <table class="min-w-full divide-y divide-gray-200 text-lg text-gray-700">
+          <thead class="bg-[rgba(232,218,239,0.8)] text-[#98208f] uppercase font-semibold text-lg">
+            <tr>
+              <th class="px-6 py-3 text-left">Tranche</th>
+              <th class="px-6 py-3 text-left">Amount Left</th>
+              <th class="px-6 py-3 text-left">Received</th>
+              <th class="px-6 py-3 text-left flex justify-between items-center">
+                <span>Repayment Date</span>
+                <button type="submit"
+                        class="ml-auto px-4 py-2 bg-[#98208f] text-white rounded hover:bg-[#7a1672] font-medium text-base normal-case whitespace-nowrap">
+                  Simulate Repayment
+                </button>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white">
+            {% for item in tranches_left %}
+              <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
+                <td class="px-6 py-2">{{ item.tranche.TrancheNumber }}</td>
+                <td class="px-6 py-2">{{ item.amount_left }}</td>
+                <td class="px-6 py-2">{{ item.received }}</td>
+                <td class="px-6 py-2">
+                  <input type="date" name="repayment_date_{{ item.tranche.TrancheNumber }}"
+                         value="{{ item.repayment_date.strftime('%Y-%m-%d') if item.repayment_date else '' }}"
+                         class="border rounded p-2 w-40" required>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </form>
+  {% elif selected_loan_number %}
+    <p class="text-gray-600 italic">All tranches for this loan appear to be fully repaid.</p>
+  {% endif %}
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="bg-red-400 text-white p-4 rounded mb-4">
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {% if schedule %}
+    <div class="mt-6">
+
+      <div class="overflow-x-auto bg-white shadow rounded-xl mx-auto">
+        <table class="min-w-full divide-y divide-gray-200 text-lg text-gray-700">
+          <thead class="bg-[rgba(232,218,239,0.8)] text-[#98208f] uppercase font-semibold text-lg">
+            <tr>
+              <th class="px-6 py-3 text-left">Tranche</th>
+              <th class="px-6 py-3 text-left">Amount Left</th>
+              <th class="px-6 py-3 text-left">Received</th>
+              <th class="px-6 py-3 text-left">Repayment Date</th>
+              <th class="px-6 py-3 text-right w-50">
+                <!-- Empty cell or a fixed width spacer -->
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white">
+            {% for entry in schedule %}
+              <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
+                <td class="px-6 py-2 font-medium">{{ entry['TrancheNumber'] }}</td>
+                <td class="px-6 py-2 font-medium">{{ entry['AmountLeft'] }}</td>
+                <td class="px-6 py-2 font-medium">{{ entry['DateReceived'] }}</td>
+                <td class="px-6 py-2 font-medium">
+                  {% if entry['RepaymentDate'] %}
+                    {{ entry['RepaymentDate'] }}
+                  {% endif %}
+                </td>
+                <td class="px-6 py-2 font-medium"></td>
+              </tr>
+            {% endfor %}
+            <tr class="bg-green-100 text-green-700 font-medium">
+              <td class="px-6 py-2">Tax (19%)</td>
+              <td class="px-6 py-2">{{ tax_on_interest }}</td>
+              <td class="px-6 py-2"></td>
+              <td class="px-6 py-2"></td>
+              <td class="px-6 py-2"></td>
+            </tr>
+            <tr class="bg-green-100 text-green-700 font-medium">
+              <td class="px-6 py-2">Interest</td>
+              <td class="px-6 py-2">{{ interest_to_lender }}</td>
+              <td class="px-6 py-2"></td>
+              <td class="px-6 py-2"></td>
+              <td class="px-6 py-2"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+</main>
+{% endblock %}
