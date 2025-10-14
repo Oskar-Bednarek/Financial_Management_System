@@ -1,0 +1,2890 @@
+{
+  "name": "Generator Protokołu Zmian Lokatorskich",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Zmiany Lokatorskie",
+        "formDescription": "Generator Protokołu Zmian Lokatorskich",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Nazwa Inwestycji",
+              "placeholder": "Glebowa",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Numer Lokalu",
+              "placeholder": "1",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Wycena",
+              "fieldType": "file",
+              "multipleFiles": false,
+              "acceptFileTypes": ".xls, .xlsx",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Data wykonania",
+              "fieldType": "date",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Termin zapłaty (opcjonalne)",
+              "placeholder": "3 dni od podpisania niniejszego protokołu "
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Protokół został pomyślnie utworzony"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -540,
+        820
+      ],
+      "id": "3e62ecbb-96aa-4731-8c4d-c5a53efbe6b7",
+      "name": "On form submission",
+      "webhookId": "b5b6c4b5-673b-43a6-ac4f-13fc48c1a016"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "Wycena",
+        "name": "=Wycena_zmian_lokatorskich_{{ $item(0).$node[\"Edit Fields\"].json[\"numerProtokolu\"] }}_{{ $item(0).$node[\"On form submission\"].json[\"Nazwa Inwestycji\"] }}_Lokal_{{ $item(0).$node[\"On form submission\"].json[\"Numer Lokalu\"]}}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Create folder\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1440,
+        820
+      ],
+      "id": "c1945d62-d755-484b-bd83-482d822f2430",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "sW3pA8ZpbhRzWpg8",
+          "name": "Google Drive KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "=Protokół nr {{ $json.numerProtokolu }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Get Rows\"].json[\"ID folderu\"] }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1000,
+        795
+      ],
+      "id": "56e195e8-399c-49c8-af31-9fbf2464ac9e",
+      "name": "Create folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "sW3pA8ZpbhRzWpg8",
+          "name": "Google Drive KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "=",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $json['ID folderu'] }}",
+            "mode": "id"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        340,
+        795
+      ],
+      "id": "d9c569d2-3f05-40c6-82d1-17171ce8a7a5",
+      "name": "Search files and folders",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "sW3pA8ZpbhRzWpg8",
+          "name": "Google Drive KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter out items with no id or empty id\nconst filteredItems = items.filter(item => item.json.id !== undefined && item.json.id !== null);\n\n// Extract all IDs\nconst ids = filteredItems.map(item => item.json.id);\n\n// Create a Set to ensure uniqueness\nconst uniqueIds = new Set(ids);\n\n// Return the count\nreturn [{\n  json: {\n    distinctIdCount: uniqueIds.size\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        795
+      ],
+      "id": "81f43e48-a12f-4824-838a-c02313498921",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "00c89aef-de1d-481d-b65e-91b61d2adedf",
+              "name": "numerProtokolu",
+              "value": "={{ $json.distinctIdCount+1 ?? 1 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        780,
+        795
+      ],
+      "id": "6c16f400-15bf-4515-9e3e-24bd3aaad223",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "1w73mdLPg8wd6yStLT09ZM4kYiJC5a6_6DqON1YX9EOI",
+          "mode": "id"
+        },
+        "name": "=Protokół_zmian_lokatorskich_{{ $item(0).$node[\"Edit Fields\"].json[\"numerProtokolu\"] }}_{{ $item(0).$node[\"On form submission\"].json[\"Nazwa Inwestycji\"] }}_Lokal_{{ $item(0).$node[\"On form submission\"].json[\"Numer Lokalu\"] }}",
+        "sameFolder": false,
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Create folder\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2100,
+        820
+      ],
+      "id": "11131c34-6bd7-4ed3-8409-c343321ed076",
+      "name": "Copy file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "sW3pA8ZpbhRzWpg8",
+          "name": "Google Drive KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pass forward both JSON data and binary\nreturn items.map(item => {\n  return {\n    json: {\n      originalData: item.json, // save form fields\n    },\n    binary: item.binary, // keep the binary file here\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        795
+      ],
+      "id": "4e77eb54-af2e-4393-ad6d-dfc7b6e95056",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "row_number",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        120,
+        795
+      ],
+      "id": "bdfb06d4-af50-4a9c-8e8f-940c0f42992e",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1lV9N_6L1cvsb6No0fDIyC0-WL5SXoVGSxztKuUCO5Iw",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1848300859,
+          "mode": "list",
+          "cachedResultName": "Dane",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lV9N_6L1cvsb6No0fDIyC0-WL5SXoVGSxztKuUCO5Iw/edit#gid=1848300859"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Inwestycja",
+              "lookupValue": "={{ $('On form submission').item.json['Nazwa Inwestycji'] }}"
+            },
+            {
+              "lookupColumn": "Numer Lokalu",
+              "lookupValue": "={{ $('On form submission').item.json['Numer Lokalu'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -100,
+        795
+      ],
+      "id": "f5009808-4bab-43a3-880b-70cbf5bcf4d0",
+      "name": "Get Rows",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "useDataOfInput": 2
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1220,
+        820
+      ],
+      "id": "31874313-bac2-46f0-89dc-a7083bb390e1",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Copy file\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $json.sheets[0].properties.title }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": 5,
+            "B": "=ZLECENIE WYKONANIA ROBÓT BUDOWLANYCH PROTOKÓŁ ZMIAN LOKATORSKICH {{ $item(0).$node[\"Edit Fields\"].json[\"numerProtokolu\"] }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "A",
+              "displayName": "A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "B",
+              "displayName": "B",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "C",
+              "displayName": "C",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "D",
+              "displayName": "D",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "E",
+              "displayName": "E",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "F",
+              "displayName": "F",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        2540,
+        420
+      ],
+      "id": "23931d7d-877f-4a0e-bddd-8ba9928f2086",
+      "name": "tytul",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Copy file\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $json.sheets[0].properties.title }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": 7,
+            "D": "={{ $item(0).$node[\"On form submission\"].json[\"Nazwa Inwestycji\"] }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "A",
+              "displayName": "A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "B",
+              "displayName": "B",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "C",
+              "displayName": "C",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "D",
+              "displayName": "D",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "E",
+              "displayName": "E",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "F",
+              "displayName": "F",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        2540,
+        620
+      ],
+      "id": "6c001ef9-d325-4ec6-b5de-e16d4d7ae68f",
+      "name": "inwestycja",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Copy file\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $json.sheets[0].properties.title }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": 9,
+            "D": "={{ $item(0).$node[\"On form submission\"].json[\"Numer Lokalu\"] }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "A",
+              "displayName": "A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "B",
+              "displayName": "B",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "C",
+              "displayName": "C",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "D",
+              "displayName": "D",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "E",
+              "displayName": "E",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "F",
+              "displayName": "F",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        2540,
+        820
+      ],
+      "id": "18ae0a03-94f1-42ce-b0bd-c001c1f5f363",
+      "name": "lokal",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Copy file\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $json.sheets[0].properties.title }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": 11,
+            "D": "={{ $item(0).$node[\"Get Rows\"].json[\"Klienci\"] }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "A",
+              "displayName": "A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "B",
+              "displayName": "B",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "C",
+              "displayName": "C",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "D",
+              "displayName": "D",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "E",
+              "displayName": "E",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "F",
+              "displayName": "F",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        2540,
+        1020
+      ],
+      "id": "c62c9c1d-ee39-4136-8f20-c789db367bc1",
+      "name": "nabywcy",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/drive/v2/files/{{ $json.id}}/copy",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"title\": \"Copy as Google Sheet\", \n  \"mimeType\": \"application/vnd.google-apps.spreadsheet\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1660,
+        820
+      ],
+      "id": "ed646ecb-0025-4b2c-a2c9-cdce52beb721",
+      "name": "Zmiana xls na sheets",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "sW3pA8ZpbhRzWpg8",
+          "name": "Google Drive KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Proszę przeanalizuj udostępniony plik i zwróć wynik zgodnie z instrukcjami. Aby zobaczyć plik użyj narzędzia.\n\nDane do wprowadzenia do dostepnego narzedzia\nID pliku : {{ $item(0).$node[\"Zmiana xls na sheets\"].json[\"id\"] }}\nNazwa arkusza : {{ $json.sheets[0].properties.title }}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=Jesteś analitykiem wycen zmian lokatorskich. Otrzymujesz plik Google Sheets zawierający szczegóły zmian zleconych przez klienta.\n\nTwoje zadania:\n1. Oblicz całkowity koszt wszystkich zmian.\n2. Streść zakres zmian w maksymalnie 5 punktach (może być mniej, jeśli zmian jest mniej).\n3. Podaj nazwe Arkusza ktory zawiera dane.\n\n\nZasady:\n- Analizuj arkusz, uzuj do tego udostepnionego narzedzia oraz podanych ID pliku oraz Nazwy arkusza.\n- Traktuj wszystkie zmiany jako jedną całość. Łącz powiązane zmiany w jeden logiczny punkt – nawet jeśli dotyczą różnych elementów (np. „Wentylacja, ogrodzenie, sufity”).\n- Każdy punkt streszczenia może zawierać **kilka nazw kategorii zmian** oddzielonych przecinkami, maksymalnie 60 znaków.\n- Unikaj nazw firm i marek – używaj tylko ogólnych nazw (np. „Drzwi wejściowe”, „Instalacje elektryczne”, „Kuchnia”).\n- Nie podawaj kosztów jednostkowych – tylko **łączny koszt wszystkich zmian**.\n- Upewnij sie ze w total cost nie zawierasz spacji(4 600,20 - W TAKI SPOSOB NIE ROB, ZAMIAST TEGO ZROB 4600,20)\n**Zwróć odpowiedź wyłącznie w formacie JSON:**\n\n```json\n{\n  \"total_cost\": \"4300,20\",\n  \"summary_points\": [\n    \"Wentylacja, ogrodzenie, sufity\",\n    \"Drzwi wejściowe, instalacja elektryczna\"\n  ],\n  \"sheet_name\": \"Sheet_1\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        1695
+      ],
+      "id": "1a970089-3535-4893-973e-74cc550c60c6",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-3-5-haiku-20241022",
+          "mode": "list",
+          "cachedResultName": "Claude Haiku 3.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        2760,
+        1915
+      ],
+      "id": "31a029f6-8b14-4703-8a0f-fc2203a23be8",
+      "name": "Anthropic Chat Model1",
+      "credentials": {
+        "anthropicApi": {
+          "id": "JKzpnxGVYFtrK96g",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Document', ``, 'string') }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Sheet', ``, 'string') }}",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        2880,
+        1915
+      ],
+      "id": "67b1592a-971d-4dda-9ffa-76944d8f50cd",
+      "name": "Get row(s) in sheet in Google Sheets1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"summary_points\": [\n    \"Wentylacja, ogrodzenie, sufity\",\n    \"Drzwi wejściowe, stolarka okienna\",\n    \"Zmiany elektryczne i oświetlenie\",\n    \"Zabudowa kuchni i AGD\",\n    \"Dodatkowe gniazdka i instalacje TV\"\n  ],\n  \"total_cost\": \"4300,20\",\n  \"sheet_name\": \"Sheet_1\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3000,
+        1915
+      ],
+      "id": "1693f7d0-f662-4c82-8615-f0d06b45d2c4",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Copy file\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Arkusz Protokol\"].json.sheets[0].properties.title }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": 14,
+            "C": "={{ $json.output.summary_points[0] ?? '' }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "A",
+              "displayName": "A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "B",
+              "displayName": "B",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "C",
+              "displayName": "C",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "D",
+              "displayName": "D",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "E",
+              "displayName": "E",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "F",
+              "displayName": "F",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        3200,
+        1170
+      ],
+      "id": "d1a4c862-2181-4ff2-bc81-4751689875b7",
+      "name": "zakres 1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $item(0).$node[\"Zmiana xls na sheets\"].json[\"id\"] }}?fields=sheets.properties.title",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2540,
+        1695
+      ],
+      "id": "08074a1b-5c1a-4bc7-a278-6228e3b77f15",
+      "name": "Nazwy arkuszy",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Copy file\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Arkusz Protokol\"].json.sheets[0].properties.title }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": 15,
+            "C": "={{ $json.output.summary_points[1] ?? '' }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "A",
+              "displayName": "A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "B",
+              "displayName": "B",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "C",
+              "displayName": "C",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "D",
+              "displayName": "D",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "E",
+              "displayName": "E",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "F",
+              "displayName": "F",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        3200,
+        1370
+      ],
+      "id": "b89152fe-b459-4c95-8bad-9a5758b4fa33",
+      "name": "zakres 2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Copy file\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Arkusz Protokol\"].json.sheets[0].properties.title }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": 16,
+            "C": "={{ $json.output.summary_points[2] ?? '' }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "A",
+              "displayName": "A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "B",
+              "displayName": "B",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "C",
+              "displayName": "C",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "D",
+              "displayName": "D",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "E",
+              "displayName": "E",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "F",
+              "displayName": "F",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        3200,
+        1570
+      ],
+      "id": "96c6664e-c62e-41c0-84d8-af4570f11e00",
+      "name": "zakres 3",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Copy file\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Arkusz Protokol\"].json.sheets[0].properties.title }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "C": "={{ $json.output.summary_points[3] ?? '' }}",
+            "row_number": 17
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "A",
+              "displayName": "A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "B",
+              "displayName": "B",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "C",
+              "displayName": "C",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "D",
+              "displayName": "D",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "E",
+              "displayName": "E",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "F",
+              "displayName": "F",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        3200,
+        1770
+      ],
+      "id": "48aafc80-2857-4b77-b449-5a1e200e02f1",
+      "name": "zakres 4",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Copy file\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Arkusz Protokol\"].json.sheets[0].properties.title }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "C": "={{ $json.output.summary_points[4] ?? '' }}",
+            "row_number": 18
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "A",
+              "displayName": "A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "B",
+              "displayName": "B",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "C",
+              "displayName": "C",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "D",
+              "displayName": "D",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "E",
+              "displayName": "E",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "F",
+              "displayName": "F",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        3200,
+        1970
+      ],
+      "id": "6eb5f95e-496d-4b8f-aacf-5574417f577a",
+      "name": "zakres 5",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Copy file\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Arkusz Protokol\"].json.sheets[0].properties.title }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": 22,
+            "F": "==if({{ $item(0).$node[\"Get Rows\"].json[\"Metraż\"] }}<=150;{{ $json.output.total_cost }};{{ $json.output.total_cost }}/{{ $item(0).$node[\"Get Rows\"].json[\"Metraż\"] }}*150)"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "A",
+              "displayName": "A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "B",
+              "displayName": "B",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "C",
+              "displayName": "C",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "D",
+              "displayName": "D",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "E",
+              "displayName": "E",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "F",
+              "displayName": "F",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        3200,
+        2170
+      ],
+      "id": "479c5a10-bad4-44d1-84d0-4decebdd3e9b",
+      "name": "cena",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Copy file\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $json.sheets[0].properties.title }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": 27,
+            "F": "={{ $item(0).$node[\"On form submission\"].json[\"Data wykonania\"] }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "A",
+              "displayName": "A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "B",
+              "displayName": "B",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "C",
+              "displayName": "C",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "D",
+              "displayName": "D",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "E",
+              "displayName": "E",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "F",
+              "displayName": "F",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        2540,
+        1220
+      ],
+      "id": "fa783c15-3adc-42f6-803e-b2c803da16be",
+      "name": "data wykonania",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Copy file\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $json.sheets[0].properties.title }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": 32,
+            "F": "={{ $item(0).$node[\"On form submission\"].json[\"Termin zapłaty\"] ?? '3 dni od podpisania niniejszego protokołu ' }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "A",
+              "displayName": "A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "B",
+              "displayName": "B",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "C",
+              "displayName": "C",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "D",
+              "displayName": "D",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "E",
+              "displayName": "E",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "F",
+              "displayName": "F",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        2540,
+        1420
+      ],
+      "id": "f7b4a3a5-6660-4a34-99ce-cd7bcc0bdf29",
+      "name": "termin platnosci",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json.id}}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2320,
+        820
+      ],
+      "id": "fd3cc375-d8ce-4adf-9dbb-ee3d90b855b6",
+      "name": "Arkusz Protokol",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Copy file\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Arkusz Protokol\"].json.sheets[0].properties.title }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": 23,
+            "F": "=={{ $json.output.total_cost }}-F22"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "A",
+              "displayName": "A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "B",
+              "displayName": "B",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "C",
+              "displayName": "C",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "D",
+              "displayName": "D",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "E",
+              "displayName": "E",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "F",
+              "displayName": "F",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        3200,
+        2370
+      ],
+      "id": "35e98f5a-6588-4588-8844-c4585dda9d9c",
+      "name": "cena 2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 6
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2870,
+        785
+      ],
+      "id": "5074d8c6-8e99-440e-9546-85fa461770d0",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "numberInputs": 7
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3420,
+        1915
+      ],
+      "id": "bffb9aa1-f73b-43b1-8072-8406d043d9c0",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3640,
+        1295
+      ],
+      "id": "ed337f54-d9fa-4a34-afea-57174d5c93e2",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Copy file\"].json['id'] }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Arkusz Protokol\"].json.sheets[0].properties.title }}",
+          "mode": "name"
+        },
+        "startIndex": 1
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        3860,
+        1295
+      ],
+      "id": "2189d1dd-cbf8-452c-a619-b6baf4108112",
+      "name": "Delete rows or columns from sheet",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "remove",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Zmiana xls na sheets\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Nazwy arkuszy\"].json.sheets[1].properties.title }}",
+          "mode": "name"
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        4300,
+        1295
+      ],
+      "id": "4f2b9260-93b1-4727-9687-f9548d4f60df",
+      "name": "Delete sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9e978580-fb29-4247-9374-b51692256706",
+              "leftValue": "={{ $item(0).$node[\"Nazwy arkuszy\"].json.sheets[1].properties.title }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4080,
+        1295
+      ],
+      "id": "b6d7f7f3-0f7a-447b-9686-18149b48931c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "=https://docs.google.com/spreadsheets/d/{{ $item(0).$node[\"Copy file\"].json[\"id\"] }}/export?format=pdf&portrait=true&sheetnames=false&printtitle=false&gridlines=false&size=A4&fitw=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "protokol"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4520,
+        1170
+      ],
+      "id": "7c7136fb-0c3e-4f12-aa63-3c8d7734b5e3",
+      "name": "HTTP Request",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "U8HhamKYNSmbqvRa",
+          "name": "Google Drive Personal"
+        },
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://docs.google.com/spreadsheets/d/{{ $item(0).$node[\"Zmiana xls na sheets\"].json[\"id\"] }}/export?format=pdf&portrait=true&sheetnames=false&printtitle=false&gridlines=false&size=A4&fitw=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "wycena"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4520,
+        1420
+      ],
+      "id": "d3a4793e-7ff2-4ca9-a354-7c4de8241694",
+      "name": "HTTP Request1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "U8HhamKYNSmbqvRa",
+          "name": "Google Drive Personal"
+        },
+        "googleSheetsOAuth2Api": {
+          "id": "GNJE8Ip6DRcxmLGV",
+          "name": "Google Sheets KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://v2.convertapi.com/convert/pdf/to/merge",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "convertApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/octet-stream"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files[0]",
+              "inputDataFieldName": "protokol"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "files[1]",
+              "inputDataFieldName": "wycena"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": "=",
+              "responseFormat": "file",
+              "outputPropertyName": "=data"
+            }
+          }
+        }
+      },
+      "id": "8c278900-3476-438f-ac72-fc6253dd2c8c",
+      "name": "PDF merge API HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        4960,
+        1295
+      ],
+      "notesInFlow": true,
+      "typeVersion": 4.2,
+      "credentials": {
+        "convertApi": {
+          "id": "uVN5d0cTLRR5bPUJ",
+          "name": "ConvertAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        4740,
+        1295
+      ],
+      "id": "3ffd5946-0d82-46f8-bb2c-f2f4d8f37189",
+      "name": "Merge4"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "=Wycena_zmian_lokatorskich_{{ $item(0).$node[\"Edit Fields\"].json[\"numerProtokolu\"] }}_{{ $item(0).$node[\"On form submission\"].json[\"Nazwa Inwestycji\"] }}_Lokal_{{ $item(0).$node[\"On form submission\"].json[\"Numer Lokalu\"]}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1880,
+        820
+      ],
+      "id": "cf729f67-6a47-4747-ba8d-a913c0a47b3b",
+      "name": "Update file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "sW3pA8ZpbhRzWpg8",
+          "name": "Google Drive KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "deleteFile",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Upload file\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        5400,
+        1295
+      ],
+      "id": "478d490f-57dc-4f13-ab2c-6bf4eb35ffdb",
+      "name": "Delete a file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "sW3pA8ZpbhRzWpg8",
+          "name": "Google Drive KeriM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "=Protokół_zmian_lokatorskich_{{ $item(0).$node[\"Edit Fields\"].json[\"numerProtokolu\"] }}_{{ $item(0).$node[\"On form submission\"].json[\"Nazwa Inwestycji\"] }}_Lokal_{{ $item(0).$node[\"On form submission\"].json[\"Numer Lokalu\"] }}.pdf",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $item(0).$node[\"Create folder\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        5180,
+        1295
+      ],
+      "id": "4c96f1a1-1b25-4ab7-b572-20c9ef7db434",
+      "name": "Upload file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "sW3pA8ZpbhRzWpg8",
+          "name": "Google Drive KeriM"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Zmiana xls na sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create folder": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Create folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy file": {
+      "main": [
+        [
+          {
+            "node": "Arkusz Protokol",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Get Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Rows": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zmiana xls na sheets": {
+      "main": [
+        [
+          {
+            "node": "Update file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "zakres 2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "zakres 3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "zakres 4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "zakres 5",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "zakres 1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "cena",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "cena 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tytul": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nazwy arkuszy": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Arkusz Protokol": {
+      "main": [
+        [
+          {
+            "node": "tytul",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "inwestycja",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "lokal",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "termin platnosci",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "nabywcy",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Nazwy arkuszy",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "data wykonania",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "inwestycja": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "lokal": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "nabywcy": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "data wykonania": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "termin platnosci": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "zakres 1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "zakres 2": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "zakres 3": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "zakres 4": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "zakres 5": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "cena": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "cena 2": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Delete rows or columns from sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete rows or columns from sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete sheet": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Delete sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "PDF merge API HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Upload file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge4": {
+      "main": [
+        [
+          {
+            "node": "PDF merge API HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update file": {
+      "main": [
+        [
+          {
+            "node": "Copy file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a file1": {
+      "main": [
+        []
+      ]
+    },
+    "Upload file1": {
+      "main": [
+        [
+          {
+            "node": "Delete a file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6074a91d-3301-47b9-9db4-e6d6167c8618",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "30817f5728a43258a241f7374816a566508c0c48265a99662644594ea3b584de"
+  },
+  "id": "SE5mHg7geheBIPsK",
+  "tags": [
+    {
+      "createdAt": "2025-07-28T20:56:25.399Z",
+      "updatedAt": "2025-07-28T20:56:25.399Z",
+      "id": "LMfyL0yJCn67gKrc",
+      "name": "KeriM"
+    }
+  ]
+}

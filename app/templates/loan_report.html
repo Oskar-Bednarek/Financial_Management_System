@@ -69,37 +69,37 @@
               <td class="px-6 py-2">{{ row.TrancheNumber }}</td>
               <td class="px-6 py-2">{{ row.DateReceived.strftime('%Y-%m-%d') }}</td>
               <td class="px-6 py-2">{{ row.LatestRepaymentDate.strftime('%Y-%m-%d') if row.LatestRepaymentDate else '-' }}</td>
-              <td class="px-6 py-2">{{ row.PrincipalLeft }}</td>
-              <td class="px-6 py-2">{{ row.PriorInterest }}</td>
+              <td class="px-6 py-2">{{ row.PrincipalLeft | pl_number }}</td>
+              <td class="px-6 py-2">{{ row.PriorInterest | pl_number }}</td>
               {% if fully_repaid %}
-                <td class="px-6 py-2">{{ row.YearlyInterest }}</td>
+                <td class="px-6 py-2">{{ row.YearlyInterest | pl_number }}</td>
               {% endif %}
-              <td class="px-6 py-2">{{ row.TotalDue }}</td>
+              <td class="px-6 py-2">{{ row.TotalDue | pl_number }}</td>
             </tr>
           {% endfor %}
 
           <!-- Total Row -->
           <tr class="bg-gray-100 font-semibold border-t border-gray-300">
             <td class="px-6 py-2" colspan="3">Total</td>
-            <td class="px-6 py-2">{{ total_principal }}</td>
-            <td class="px-6 py-2">{{ total_prior }}</td>
+            <td class="px-6 py-2">{{ total_principal | pl_number }}</td>
+            <td class="px-6 py-2">{{ total_prior | pl_number }}</td>
             {% if fully_repaid %}
-              <td class="px-6 py-2">{{ total_current }}</td>
+              <td class="px-6 py-2">{{ total_current | pl_number }}</td>
             {% endif %}
-            <td class="px-6 py-2">{{ total_interest }}</td>
+            <td class="px-6 py-2">{{ total_due | pl_number }}</td>
           </tr>
 
           {% if tax is not none %}
             <!-- Tax Row -->
             <tr class="bg-green-100 text-green-700 font-medium">
               <td class="px-6 py-2" colspan="1">Tax on Interest (19%)</td>
-              <td class="px-6 py-2" colspan="{{ 6 if fully_repaid else 5 }}">{{ tax }}</td>
+              <td class="px-6 py-2" colspan="{{ 6 if fully_repaid else 5 }}">{{ tax | pl_number }}</td>
             </tr>
 
             <!-- Lender Interest Row -->
             <tr class="bg-green-100 text-green-700 font-medium">
               <td class="px-6 py-2" colspan="1">Interest to Lender</td>
-              <td class="px-6 py-2" colspan="{{ 6 if fully_repaid else 5 }}">{{ lender_interest }}</td>
+              <td class="px-6 py-2" colspan="{{ 6 if fully_repaid else 5 }}">{{ lender_interest | pl_number }}</td>
             </tr>
           {% endif %}
         {% else %}

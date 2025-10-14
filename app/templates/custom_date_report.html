@@ -60,9 +60,9 @@
                   Loan {{ row.LoanNumber }} - {{ row.ProjectName }} - {{ row.ProjectType }}
                 {% endif %}</td>
               <td class="px-6 py-2 tranche-column">{{ row.TrancheNumber }}</td>
-              <td class="px-6 py-2 text-right">{{ row.PrincipalLeft }}</td>
-              <td class="px-6 py-2 text-right">{{ row.PriorInterest }}</td>
-              <td class="px-6 py-2 text-right">{{ row.TotalDue }}</td>
+              <td class="px-6 py-2 text-right">{{ row.PrincipalLeft | pl_number }}</td>
+              <td class="px-6 py-2 text-right">{{ row.PriorInterest | pl_number }}</td>
+              <td class="px-6 py-2 text-right">{{ row.TotalDue | pl_number }}</td>
             </tr>
           {% endfor %}
         {% else %}

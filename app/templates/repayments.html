@@ -121,7 +121,7 @@
                 <td class="px-6 py-4">{{ r.LoanNumber }}</td>
                 <td class="px-6 py-4">{{ r.TrancheNumber }}</td>
                 <td class="px-6 py-4">{{ r.DatePaid.strftime('%Y-%m-%d') }}</td>
-                <td class="px-6 py-4">{{ "{:,.2f}".format(r.AmountPaid) }}</td>
+                <td class="px-6 py-4">{{ r.AmountPaid | pl_number }}</td>
                 <td class="px-6 py-4 font-semibold text-lg">
                   {% if r.Status == "Full Repayment" %}
                     <span class="text-green-700">Full Repayment</span>
@@ -207,6 +207,9 @@
 
 {% block scripts %}
 <script>
+  const GET_TRANCHES_BASE = "{{ url_for('repayments.get_tranches', loan_number=0) }}"; // e.g. "/repayments/get_tranches/0"
+
+
   function toggleFilter() {
     const dropdown = document.getElementById("filter-dropdown");
     dropdown.classList.toggle("hidden");
@@ -248,38 +251,71 @@
     document.getElementById("repayment-modal").classList.add("hidden");
   }
 
-  function fetchTranches(loanNumber) {
-    console.log("Selected loan:", loanNumber);
+const fmtPL = new Intl.NumberFormat('pl-PL', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+});
 
-    const trancheDropdown = document.getElementById("tranche-dropdown");
-    trancheDropdown.innerHTML = '<option value="">Select a tranche</option>';
+function fetchTranches(loanNumber) {
+  console.log("Selected loan:", loanNumber);
 
-    if (!loanNumber) return;
+  const trancheDropdown = document.getElementById("tranche-dropdown");
+  trancheDropdown.innerHTML = '<option value="">Select a tranche</option>';
+  trancheDropdown.disabled = true;
 
-    fetch(`/repayments/get_tranches/${loanNumber}`)
-      .then(response => {
-        if (!response.ok) throw new Error("Network response was not ok");
-        return response.json();
-      })
-      .then(data => {
-        console.log("Received data:", data);
+  if (!loanNumber) return;
 
-        // Ensure that the data contains tranches
-        if (Array.isArray(data)) {
-          data.forEach(tranche => {
-            const option = document.createElement("option");
-            option.value = tranche.TrancheNumber;
-            // Show RemainingAmount instead of full amount
-            option.textContent = `Tranche #${tranche.TrancheNumber} - Remaining: ${tranche.RemainingAmount.toFixed(2)}`;
-            trancheDropdown.appendChild(option);
-          });
-        } else {
-          console.warn("Unexpected data format:", data);
-        }
-      })
-      .catch(error => {
-        console.error("Error fetching tranches:", error);
+  // Build URL from Flask’s url_for template and add a cache-buster
+  const url = GET_TRANCHES_BASE.replace(/\/0$/, `/${encodeURIComponent(loanNumber)}`) + `?ts=${Date.now()}`;
+
+  fetch(url, { headers: { 'Accept': 'application/json' } })
+    .then(async (response) => {
+      if (!response.ok) {
+        const body = await response.text(); // log server error snippet if any
+        throw new Error(`HTTP ${response.status}: ${body.slice(0,200)}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Received data:", data);
+
+      if (!Array.isArray(data)) {
+        console.warn("Unexpected data format:", data);
+        return;
+      }
+
+      if (data.length === 0) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "No unpaid tranches";
+        trancheDropdown.appendChild(opt);
+        return;
+      }
+
+      data.forEach((tranche) => {
+        const option = document.createElement("option");
+        option.value = tranche.TrancheNumber;
+
+        // RemainingAmount is a string like "1234.56" → convert then format
+        const remainingNum = Number(tranche.RemainingAmount);
+        const remainingText = Number.isFinite(remainingNum)
+          ? fmtPL.format(remainingNum) + " zł"
+          : String(tranche.RemainingAmount); // fallback
+
+        option.textContent = `Tranche #${tranche.TrancheNumber} - Remaining: ${remainingText}`;
+        trancheDropdown.appendChild(option);
       });
-  }
+    })
+    .catch((error) => {
+      console.error("Error fetching tranches:", error);
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "Failed to load tranches";
+      trancheDropdown.appendChild(opt);
+    })
+    .finally(() => {
+      trancheDropdown.disabled = false;
+    });
+}
 </script>
 {% endblock %}

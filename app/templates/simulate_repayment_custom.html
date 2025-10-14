@@ -35,7 +35,7 @@
                 class="px-4 py-2 bg-[#98208f] text-white rounded hover:bg-[#7a1672] whitespace-nowrap">
           Export
         </button>
-        <a href="{{ url_for('report.simulate_repayment') }}"
+        <a href="{{ url_for('repayment_sim.simulate_repayment') }}"
           class="px-4 py-2 bg-[#98208f] text-white rounded hover:bg-[#7a1672] whitespace-nowrap">
           Go to Automatic Simulation
         </a>
@@ -68,7 +68,7 @@
             {% for item in tranches_left %}
               <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
                 <td class="px-6 py-2">{{ item.tranche.TrancheNumber }}</td>
-                <td class="px-6 py-2">{{ item.amount_left }}</td>
+                <td class="px-6 py-2">{{ item.amount_left | pl_number }}</td>
                 <td class="px-6 py-2">{{ item.received }}</td>
                 <td class="px-6 py-2">
                   <input type="date" name="repayment_date_{{ item.tranche.TrancheNumber }}"
@@ -118,7 +118,7 @@
             {% for entry in schedule %}
               <tr class="border-b border-gray-200 hover:bg-gray-50 transition">
                 <td class="px-6 py-2 font-medium">{{ entry['TrancheNumber'] }}</td>
-                <td class="px-6 py-2 font-medium">{{ entry['AmountLeft'] }}</td>
+                <td class="px-6 py-2 font-medium">{{ entry['AmountLeft'] | pl_number }}</td>
                 <td class="px-6 py-2 font-medium">{{ entry['DateReceived'] }}</td>
                 <td class="px-6 py-2 font-medium">
                   {% if entry['RepaymentDate'] %}
@@ -130,14 +130,14 @@
             {% endfor %}
             <tr class="bg-green-100 text-green-700 font-medium">
               <td class="px-6 py-2">Tax (19%)</td>
-              <td class="px-6 py-2">{{ tax_on_interest }}</td>
+              <td class="px-6 py-2">{{ tax_on_interest | pl_number }}</td>
               <td class="px-6 py-2"></td>
               <td class="px-6 py-2"></td>
               <td class="px-6 py-2"></td>
             </tr>
             <tr class="bg-green-100 text-green-700 font-medium">
               <td class="px-6 py-2">Interest</td>
-              <td class="px-6 py-2">{{ interest_to_lender }}</td>
+              <td class="px-6 py-2">{{ interest_to_lender | pl_number }}</td>
               <td class="px-6 py-2"></td>
               <td class="px-6 py-2"></td>
               <td class="px-6 py-2"></td>

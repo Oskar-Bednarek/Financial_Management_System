@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main>
+  <!-- Top Bar -->
+  <div class="flex items-center justify-between bg-[rgba(232,218,239,0.8)] p-4 shadow rounded-md mb-6">
+    <h2 class="text-2xl font-bold text-[#98208f]">Workflows</h2>
+  </div>
+
+  <!-- Workflow Buttons Grid -->
+  <div class="flex flex-wrap gap-6 mb-8">
+    <button onclick="openTenantChangesModal()" 
+            class="w-64 h-24 bg-[#98208f] text-white font-bold text-xl rounded-lg shadow-lg hover:bg-[#6b146e] transition text-center p-4 flex items-center justify-center">
+      Tenant Changes Protocol Generation
+    </button>
+  </div>
+
+  <!-- Tenant Changes Modal -->
+  <div id="tenant-changes-modal" class="fixed inset-0 z-50 bg-black bg-opacity-50 hidden items-center justify-center">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
+      <h2 class="text-xl font-semibold mb-4">Tenant Changes Workflow</h2>
+      <form method="POST" action="{{ url_for('workflows.workflow_submit') }}" enctype="multipart/form-data" class="space-y-4">
+        
+        <!-- Project Name -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
+          <input type="text" name="project_name" required class="w-full border border-gray-300 rounded px-3 py-2">
+        </div>
+
+        <!-- Unit Number -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Unit Number</label>
+          <input type="text" name="unit_number" required class="w-full border border-gray-300 rounded px-3 py-2">
+        </div>
+
+        <!-- Price Estimate (file) -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Price Estimate (Excel)</label>
+          <input type="file" name="price_estimate" 
+                 accept=".xls,.xlsx" 
+                 required 
+                 class="w-full border border-gray-300 rounded px-3 py-2 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#98208f] file:text-white hover:file:bg-[#6b146e]">
+        </div>
+
+        <!-- Contract Date -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Contract Date</label>
+          <input type="date" name="contract_date" required class="w-full border border-gray-300 rounded px-3 py-2">
+        </div>
+
+        <!-- Time of Payment -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Time of Payment <span class="text-gray-500 text-sm">(optional)</span></label>
+          <input type="text" name="time_of_payment" placeholder="Leave empty for default: 3 dni od podpisania protokołu" class="w-full border border-gray-300 rounded px-3 py-2">
+        </div>
+
+        <!-- Modal Actions -->
+        <div class="flex justify-end space-x-3 pt-2">
+          <button type="button" onclick="closeTenantChangesModal()" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">
+            Cancel
+          </button>
+          <button type="submit" id="submitBtn" class="bg-[#98208f] text-white px-4 py-2 rounded hover:bg-[#6b146e]">
+            Submit
+          </button>
+        </div>
+      </form>
+
+      <!-- Close Button -->
+      <button onclick="closeTenantChangesModal()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+    </div>
+  </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function openTenantChangesModal() {
+    document.getElementById("tenant-changes-modal").classList.remove("hidden");
+    document.getElementById("tenant-changes-modal").classList.add("flex");
+    
+    // Reset form and button state when opening
+    const form = document.querySelector('#tenant-changes-modal form');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    form.reset();
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit';
+    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    submitBtn.classList.add('hover:bg-[#6b146e]');
+  }
+
+  function closeTenantChangesModal() {
+    document.getElementById("tenant-changes-modal").classList.remove("flex");
+    document.getElementById("tenant-changes-modal").classList.add("hidden");
+  }
+
+  // Handle form submission
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('#tenant-changes-modal form');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    form.addEventListener('submit', function(e) {
+      // Disable submit button and show loading state
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Processing...';
+      submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      submitBtn.classList.remove('hover:bg-[#6b146e]');
+      
+      // Close modal after a short delay
+      setTimeout(() => {
+        closeTenantChangesModal();
+      }, 500);
+    });
+  });
+</script>
+{% endblock %}

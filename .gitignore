@@ -1,5 +1,14 @@
 # Ignore sensitive config
 /config.py
+.env
+.env.*
+claude.md
+
+# Ignore Google OAuth tokens and credentials
+token.json
+credentials.json
+*_token.json
+*_credentials.json
 
 # Ignore real logos
 app/static/logo.png

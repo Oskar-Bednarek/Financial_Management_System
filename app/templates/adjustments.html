@@ -195,76 +195,114 @@
 
 {% block scripts %}
 <script>
-    function toggleExport() {
-        document.getElementById('export-dropdown').classList.toggle('hidden');
-        document.getElementById('export-format').classList.add('hidden');
+  // Build the exact endpoint from Flask (works with or without blueprint prefixes)
+  const GET_ADJ_TRANCHES_BASE = "{{ url_for('adjustments.get_tranches', loan_number=0) }}"; // e.g. "/adjustments/get_tranches/0"
+
+  function toggleExport() {
+    document.getElementById('export-dropdown').classList.toggle('hidden');
+    document.getElementById('export-format').classList.add('hidden');
+  }
+
+  function showExportOptions(type) {
+    document.getElementById('export-format').classList.remove('hidden');
+    document.getElementById('export-dropdown').classList.add('hidden');
+
+    const excelLink = document.getElementById('export-excel-link');
+    const csvLink = document.getElementById('export-csv-link');
+
+    excelLink.href = "{{ url_for('export.export_data', export_type='adjustments', file_type='excel') }}";
+    csvLink.href = "{{ url_for('export.export_data', export_type='adjustments', file_type='csv') }}";
+
+    if (type === 'all') {
+      excelLink.href = excelLink.href.replace('adjustments', 'all');
+      csvLink.href = csvLink.href.replace('adjustments', 'all');
     }
+  }
 
-    function showExportOptions(type) {
-        document.getElementById('export-format').classList.remove('hidden');
-        document.getElementById('export-dropdown').classList.add('hidden');
-
-        const excelLink = document.getElementById('export-excel-link');
-        const csvLink = document.getElementById('export-csv-link');
-
-        excelLink.href = "{{ url_for('export.export_data', export_type='adjustments', file_type='excel') }}";
-        csvLink.href = "{{ url_for('export.export_data', export_type='adjustments', file_type='csv') }}";
-
-        if (type === 'all') {
-        excelLink.href = excelLink.href.replace('adjustments', 'all');
-        csvLink.href = csvLink.href.replace('adjustments', 'all');
-        }
-    }
-    function openAdjustmentModal() {
+  function openAdjustmentModal() {
     document.getElementById("adjustment-modal").classList.remove("hidden");
     document.getElementById("adjustment-modal").classList.add("flex");
-    }
+  }
 
-    function closeAdjustmentModal() {
+  function closeAdjustmentModal() {
     document.getElementById("adjustment-modal").classList.remove("flex");
     document.getElementById("adjustment-modal").classList.add("hidden");
-    }
+  }
 
-    function fetchTranches(loanNumber) {
+  // Polish number formatter for display
+  const fmtPL_adj = new Intl.NumberFormat('pl-PL', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+
+  function fetchTranches(loanNumber) {
     console.log("Selected loan:", loanNumber);
 
     const trancheDropdown = document.getElementById("tranche-dropdown");
     trancheDropdown.innerHTML = '<option value="">Select a tranche</option>';
+    trancheDropdown.disabled = true;
 
     if (!loanNumber) return;
 
-    fetch(`/adjustments/get_tranches/${loanNumber}`)
-        .then(response => {
-        if (!response.ok) throw new Error("Network response was not ok");
+    // Build URL from Flask base and add cache-buster
+    const url = GET_ADJ_TRANCHES_BASE.replace(/\/0$/, `/${encodeURIComponent(loanNumber)}`) + `?ts=${Date.now()}`;
+
+    fetch(url, { headers: { 'Accept': 'application/json' } })
+      .then(async (response) => {
+        if (!response.ok) {
+          const body = await response.text(); // helpful snippet in console
+          throw new Error(`HTTP ${response.status}: ${body.slice(0,200)}`);
+        }
         return response.json();
-        })
-        .then(data => {
+      })
+      .then((data) => {
         console.log("Received data:", data);
 
-        if (Array.isArray(data.tranches)) {
-            data.tranches.forEach(tranche => {
-            const option = document.createElement("option");
-            option.value = tranche.TrancheNumber;
-            option.textContent = `Tranche #${tranche.TrancheNumber} - ${tranche.Amount.toFixed(2)}`;
-            trancheDropdown.appendChild(option);
-            });
-        } else {
-            console.warn("Unexpected data format:", data);
+        const list = Array.isArray(data?.tranches) ? data.tranches : [];
+        if (list.length === 0) {
+          const opt = document.createElement("option");
+          opt.value = "";
+          opt.textContent = "No tranches found";
+          trancheDropdown.appendChild(opt);
+          return;
         }
-        })
-        .catch(error => {
-        console.error("Error fetching tranches:", error);
+
+        list.forEach(tranche => {
+          const option = document.createElement("option");
+          option.value = tranche.TrancheNumber;
+
+          // Backend sends Amount as a string like "1234.56" → convert then format
+          const amountNum = Number(tranche.Amount);
+          const amountText = Number.isFinite(amountNum)
+            ? fmtPL_adj.format(amountNum) + " zł"
+            : String(tranche.Amount); // fallback if parsing fails
+
+          const dateText = tranche.DateReceived ? ` • ${tranche.DateReceived}` : "";
+
+          option.textContent = `Tranche #${tranche.TrancheNumber} — Amount: ${amountText}${dateText}`;
+          trancheDropdown.appendChild(option);
         });
-    }
-    function toggleFilter() {
+      })
+      .catch((error) => {
+        console.error("Error fetching tranches:", error);
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "Failed to load tranches";
+        trancheDropdown.appendChild(opt);
+      })
+      .finally(() => {
+        trancheDropdown.disabled = false;
+      });
+  }
+
+  function toggleFilter() {
     const dropdown = document.getElementById("filter-dropdown");
     dropdown.classList.toggle("hidden");
-    }
+  }
 
-    function toggleAll(source, name) {
+  function toggleAll(source, name) {
     const checkboxes = document.querySelectorAll(`input[name='${name}']`);
     checkboxes.forEach(cb => cb.checked = source.checked);
-    }
-
+  }
 </script>
 {% endblock %}

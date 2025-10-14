@@ -148,7 +148,7 @@
                             <td class="px-6 py-4 text-lg font-medium">{{ tranche.TrancheNumber }}</td>
                             <td class="px-6 py-4 text-lg">
                                 {% if tranche.Amount is not none %}
-                                    {{ "{:,.2f}".format(tranche.Amount) }}
+                                    {{ tranche.Amount | pl_number }}
                                 {% else %}
                                     N/A
                                 {% endif %}

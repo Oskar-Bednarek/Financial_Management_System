@@ -41,31 +41,34 @@
           Reports
         </summary>
         <div class="flex flex-col space-y-2 mt-2">
-          <a href="{{ url_for('report.yearly_report') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-10 py-3 transition-all">
+          <a href="{{ url_for('report_annual.annual_summary') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-10 py-3 transition-all">
             Annual Summary
           </a>
         </div>
         <div class="flex flex-col space-y-2 mt-2">
-          <a href="{{ url_for('report.custom_date_report') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-10 py-3 transition-all">
+          <a href="{{ url_for('report_daily.custom_date_report') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-10 py-3 transition-all">
             Daily Summary
           </a>
         </div>
         <div class="flex flex-col space-y-2 mt-2">
-          <a href="{{ url_for('report.loan_report') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-10 py-3 transition-all">
+          <a href="{{ url_for('report_loan.loan_report') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-10 py-3 transition-all">
             Loan Snapshot
           </a>
         </div>
         <div class="flex flex-col space-y-2 mt-2">
-          <a href="{{ url_for('report.simulate_repayment') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-10 py-3 transition-all">
+          <a href="{{ url_for('repayment_sim.simulate_repayment') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-10 py-3 transition-all">
             Repayment Simulation
           </a>
         </div>
       </details>
+      <a href="{{ url_for('workflows.workflow_start') }}" class="w-full bg-[#E8DAEF] text-[#98208f] hover:bg-[#98208f] hover:text-white text-left pl-6 py-3 transition-all">
+        Workflows
+      </a>
     </div>
   
     <!-- Version Note -->
     <div class="mt-auto text-center text-sm text-[#98208f]">
       <p>Financial Management System</p>
-      <p>Version 1.0.0</p>
+      <p>Version 2.0.0</p>
     </div>
 </aside>

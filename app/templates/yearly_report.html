@@ -62,10 +62,10 @@
                 {% endif %}
               </td>
               <td class="px-6 py-2 tranche-column">{{ row.TrancheNumber }}</td>
-              <td class="px-6 py-2">{{ row.PrincipalLeft }}</td>
-              <td class="px-6 py-2">{{ row.PriorInterest }}</td>
-              <td class="px-6 py-2">{{ row.YearlyInterest }}</td>
-              <td class="px-6 py-2">{{ row.TotalDue }}</td>
+              <td class="px-6 py-2">{{ row.PrincipalLeft | pl_number }}</td>
+              <td class="px-6 py-2">{{ row.PriorInterest | pl_number }}</td>
+              <td class="px-6 py-2">{{ row.YearlyInterest | pl_number }}</td>
+              <td class="px-6 py-2">{{ row.TotalDue | pl_number }}</td>
             </tr>
           {% endfor %}
         {% else %}

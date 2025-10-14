@@ -33,6 +33,24 @@
               </div>
             </div>
 
+            <!-- Start Date Range Filter -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Start Date Range</label>
+                <div class="flex space-x-2">
+                    <input type="date" name="start_date_from" value="{{ start_date_from }}" class="w-1/2 border border-gray-300 rounded px-2 py-1">
+                    <input type="date" name="start_date_to" value="{{ start_date_to }}" class="w-1/2 border border-gray-300 rounded px-2 py-1">
+                </div>
+            </div>
+
+            <!-- End Date Range Filter -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">End Date Range</label>
+                <div class="flex space-x-2">
+                    <input type="date" name="end_date_from" value="{{ end_date_from }}" class="w-1/2 border border-gray-300 rounded px-2 py-1">
+                    <input type="date" name="end_date_to" value="{{ end_date_to }}" class="w-1/2 border border-gray-300 rounded px-2 py-1">
+                </div>
+            </div>
+
             <!-- Buttons -->
             <div class="flex flex-col gap-2">
               <button type="submit" class="w-full bg-[#98208f] text-white font-medium px-4 py-2 rounded hover:bg-[#6b146e]">
