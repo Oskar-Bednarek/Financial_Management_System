@@ -1,4 +1,4 @@
-# 💼 KeriM Financial Management System
+# 💼 Financial Management System
 
 A custom-built, Flask-based financial management system designed to track projects, loans, tranches, repayments, and generate detailed financial reports with advanced automation capabilities.
 
@@ -194,9 +194,7 @@ You may use the placeholders already included if you just want to test.
 python run.py
 ```
 
-Your default web browser will open automatically at:
 
-**[http://127.0.0.1:5000/Kerim_Financial_Management_System](http://127.0.0.1:5000/Kerim_Financial_Management_System)**
 
 The application auto-opens your browser after a 1.5-second delay.
 
